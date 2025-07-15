@@ -1,0 +1,257 @@
+#######################################################################
+# Test for copying block of size 4;
+#######################################################################
+	.pos 0
+main:	irmovq Stack, %rsp  	# Set up stack pointer
+
+	# Set up arguments for copy function and then invoke it
+	irmovq $4, %rdx		# src and dst have 4 elements
+	irmovq dest, %rsi	# dst array
+	irmovq src, %rdi	# src array
+	call ncopy		 
+	halt			# should halt with num nonzeros in %rax
+StartFun:
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+#
+# Describe how and why you modified the baseline code.
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+##################################################################
+		iaddq $-8, %rdx
+		jl remain
+
+
+loop:
+		mrmovq (%rdi), %r8
+		mrmovq 8(%rdi), %r9
+		mrmovq 16(%rdi), %r10
+		mrmovq 24(%rdi), %r11
+		mrmovq 32(%rdi), %r12
+		mrmovq 40(%rdi), %r13
+		mrmovq 48(%rdi), %r14
+		mrmovq 56(%rdi), %rcx
+comp1:		
+		andq %r8,%r8
+		rmmovq %r8, (%rsi)
+		jle comp2
+		iaddq $1, %rax
+		
+comp2:		
+		andq %r9,%r9
+		rmmovq %r9, 8(%rsi)
+		jle comp3
+		iaddq $1, %rax
+		
+comp3:		
+		andq %r10,%r10
+		rmmovq %r10, 16(%rsi)
+		jle comp4
+		iaddq $1, %rax
+comp4:		
+		andq %r11,%r11
+		rmmovq %r11, 24(%rsi)
+		jle comp5
+		iaddq $1, %rax
+		
+comp5:		
+		andq %r12,%r12
+		rmmovq %r12, 32(%rsi)
+		jle comp6
+		iaddq $1, %rax
+		
+comp6:		
+		andq %r13,%r13
+		rmmovq %r13, $40(%rsi)
+		jle comp7
+		iaddq $1, %rax
+
+comp7:		
+		andq %r14,%r14
+		rmmovq %r14, 48(%rsi)
+		jle comp8
+		iaddq $1, %rax
+		
+		
+comp8:		
+		andq %rcx,%rcx
+		rmmovq %rcx, 56(%rsi)
+		jle test
+		iaddq $1, %rax
+		
+		
+test:		
+		iaddq $64,%rdi
+		iaddq $64,%rsi
+		iaddq $-8, %rdx
+		jge loop
+		
+remain:        
+		
+		
+	       iaddq $4, %rdx
+               andq %rdx,%rdx
+	       jl remain2
+	       iaddq $-4, %rdx
+	       
+
+		
+		
+		
+	
+		
+	
+		
+		
+		
+       
+	       
+	       
+	     
+	       
+	       
+handle_4:      mrmovq (%rdi), %r8
+		mrmovq 8(%rdi), %r9
+		mrmovq 16(%rdi), %r10
+		mrmovq 24(%rdi), %r11
+		
+		
+		
+c41:
+	       andq %r8,%r8
+	       rmmovq %r8,(%rsi)
+	       jle c42
+	       iaddq $1, %rax
+	       
+	       
+c42:
+	       andq %r9,%r9
+	       rmmovq %r9,8(%rsi)
+	       jle c43
+	       iaddq $1, %rax
+	       
+c43:
+	       andq %r10,%r10
+	       rmmovq %r10,16(%rsi)
+	       jle c44
+	       iaddq $1, %rax	       
+	       
+c44:
+	       andq %r11,%r11
+	       rmmovq %r11,24(%rsi)
+	       jle end_4
+	       iaddq $1, %rax	   
+	     
+end_4:
+		iaddq $32,%rdi
+		iaddq $32,%rsi
+		
+
+		
+remain2:
+		iaddq $2,%rdx
+		andq %rdx,%rdx
+		jl remain3
+		iaddq $-2,%rdx
+		
+		
+		
+handle_2:
+		mrmovq (%rdi), %r8
+		mrmovq 8(%rdi), %r9
+		
+c21:
+	       andq %r8,%r8
+	       rmmovq %r8,(%rsi)
+	       jle c22
+	       iaddq $1, %rax
+		    
+c22:
+	       andq %r9,%r9
+	       rmmovq %r9,8(%rsi)
+	       jle end_2
+	       iaddq $1, %rax	       
+	       
+end_2:
+		iaddq $16, %rdi
+		iaddq  $16, %rsi
+		
+
+remain3:
+               iaddq $1,%rdx
+		andq %rdx,%rdx
+		jl Done
+		
+handle_1:	
+		mrmovq(%rdi),%r8
+		andq %r8,%r8
+		rmmovq %r8,(%rsi)
+		jle Done
+		iaddq $1,%rax
+		
+	       
+	 
+		
+		
+	
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+EndFun:
+
+###############################
+# Source and destination blocks 
+###############################
+	.align 8
+src:
+	.quad -1
+	.quad -2
+	.quad 3
+	.quad 4
+	.quad 0xbcdefa # This shouldn't get moved
+
+	.align 16
+Predest:
+	.quad 0xbcdefa
+dest:
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+Postdest:
+	.quad 0xdefabc
+
+.align 8
+# Run time stack
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+
+Stack:
